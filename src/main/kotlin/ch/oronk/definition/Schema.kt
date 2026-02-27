@@ -1,0 +1,33 @@
+package org.example.ch.oronk.definition
+
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
+
+@Serializable
+data class SchemaDefinition(
+    val data_objects: List<DataObject>,
+    val web_objects: List<WebObject>
+)
+
+@Serializable
+data class DataObject(
+    val name: String,
+    val fields: List<Field>
+)
+
+@Serializable
+data class Field(
+    val name: String,
+    val type: String,
+    val required: Boolean,
+    val fk: String? = null  // Made nullable since it might not always be present
+)
+
+@Serializable
+data class WebObject(
+    val ref_object: String,
+    val path: String,
+    val methods: List<String>,
+    val exclude_fields: List<String>,
+    val include_fields: List<String>
+)

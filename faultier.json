@@ -1,0 +1,34 @@
+{
+  "data_objects": [
+    {
+      "name": "test",
+      "fields": [
+        {
+          "name": "email",
+          "type": "int",
+          "required": true,
+          "fk": "Table.id"
+        },
+        {
+          "name": "gender",
+          "type": "int",
+          "required": true,
+          "fk": "Table.id"
+        }
+      ]
+    }
+  ],
+  "web_objects": [
+    {
+      "methods": ["GET, POST"],
+      "ref_object": "Test",
+      "path": "/api/",
+      "exclude_fields": [
+        "gender"
+      ],
+      "include_fields": [
+        "email"
+      ]
+    }
+  ]
+}
