@@ -2,15 +2,17 @@ package org.example.ch.oronk.generators
 
 import org.example.ch.oronk.definition.Field
 
-fun dataGenerateDataClass(className: String, fields: List<Field>): String {
+fun dataGenerateDataClass(className: String, packageName: String, fields: List<Field>): String {
     val stringBuilder = StringBuilder()
 
-    stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table.Dual.autoGenerate")
-    stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table.Dual.uuid")
-    stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table.Dual.integer")
+    stringBuilder.append("package $packageName\n")
+
+    stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table\n")
+    stringBuilder.appendLine("import kotlin.uuid.ExperimentalUuidApi\n")
+
 
     // Add data class declaration
-    stringBuilder.appendLine("object $className : Table() {")
+    stringBuilder.appendLine("object $className : Table() {\n")
     stringBuilder.appendLine("    @OptIn(ExperimentalUuidApi::class)\n")
     stringBuilder.appendLine("    val id = uuid(\"id\").autoGenerate()")
     // Add fields
@@ -18,9 +20,10 @@ fun dataGenerateDataClass(className: String, fields: List<Field>): String {
         val nullableSuffix = if (!field.required) ".nullable()" else ""
         val foreignKeySuffix = if (field.fk == null) "references(${field.fk})" else ""
 
-        stringBuilder.appendLine("    val ${field.name}: ${fieldTypeConvert(field.type, field.name)}$nullableSuffix$foreignKeySuffix")
+        stringBuilder.appendLine("    val ${field.name} = ${fieldTypeConvert(field.type, field.name)}$nullableSuffix$foreignKeySuffix\n")
     }
-    stringBuilder.appendLine("    override val primaryKey = PrimaryKey(id)")
+    stringBuilder.appendLine("    @OptIn(ExperimentalUuidApi::class)\n")
+    stringBuilder.appendLine("    override val primaryKey = PrimaryKey(id)\n")
     stringBuilder.appendLine("}")
 
 

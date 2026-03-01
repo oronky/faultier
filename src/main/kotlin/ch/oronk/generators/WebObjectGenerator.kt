@@ -2,9 +2,9 @@ package org.example.ch.oronk.generators
 
 import org.example.ch.oronk.definition.Field
 
-fun webGenerateDataClass(className: String, refClassName: String, fields: List<Field>): String {
+fun webGenerateDataClass(className: String, packageName: String, dataPackageName: String, refClassName: String, fields: List<Field>): String {
     val stringBuilder = StringBuilder()
-
+    stringBuilder.append("package $packageName\n")
     // Add data class declaration
     stringBuilder.appendLine("data class $className(")
 
@@ -16,10 +16,10 @@ fun webGenerateDataClass(className: String, refClassName: String, fields: List<F
         stringBuilder.appendLine("    val ${field.name}: ${fieldTypeConvert(field.type)}$nullableSuffix$comma")
     }
 
-    stringBuilder.appendLine(") {")
+    stringBuilder.appendLine(") {\n")
     // Add copyFrom method
     stringBuilder.appendLine()
-    stringBuilder.appendLine("    fun copyFrom(other: $refClassName): $className {")
+    stringBuilder.appendLine("    fun copyFrom(other: $dataPackageName.$refClassName): $className {\n")
     stringBuilder.appendLine("        return copy(")
 
     fields.forEachIndexed { index, field ->
@@ -27,9 +27,9 @@ fun webGenerateDataClass(className: String, refClassName: String, fields: List<F
         stringBuilder.appendLine("            ${field.name} = other.${field.name}$comma")
     }
 
-    stringBuilder.appendLine("        )")
-    stringBuilder.appendLine("    }")
-    stringBuilder.appendLine("}")
+    stringBuilder.appendLine("        )\n")
+    stringBuilder.appendLine("    }\n")
+    stringBuilder.appendLine("}\n")
 
     return stringBuilder.toString()
 }

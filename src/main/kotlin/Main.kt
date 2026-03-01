@@ -1,13 +1,10 @@
 package org.example
 
 import kotlinx.serialization.json.Json
-import org.example.ch.oronk.definition.DataObject
 import org.example.ch.oronk.definition.SchemaDefinition
-import org.example.ch.oronk.definition.WebObject
 import org.example.ch.oronk.generators.dataGenerateDataClass
 import org.example.ch.oronk.generators.webGenerateDataClass
 import java.io.File
-import java.nio.file.Files
 
 fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)
@@ -15,13 +12,17 @@ fun main() {
 
     val path = "E:/Programmieren/Faultier/test"
 
+    val webModelPackage = listOf("ch", "oronk", "web", "model")
+    val dataModelPackage = listOf("ch", "oronk", "data", "model")
 
 
+    val webObjectPath = "$path/" + webModelPackage.joinToString("/")
+    val dataPathname = "$path/" + dataModelPackage.joinToString("/")
 
-     File("$path/web/model").mkdirs()
+    File(webObjectPath).mkdirs()
     for (webObject in schema.web_objects) {
         var ref_object = db_object_by_name[webObject.ref_object]
-        if(ref_object == null) {
+        if (ref_object == null) {
             throw IllegalArgumentException("No reference object found for ${webObject.ref_object}.")
         }
         if (webObject.exclude_fields.isNotEmpty() and webObject.include_fields.isNotEmpty()) {
@@ -36,21 +37,29 @@ fun main() {
             fields.drop(exclude_index)
         }
 
-        for (include_field in webObject.include_fields) {
-            val include_index = fields.indexOfFirst { it.name == include_field }
-            if (include_index == -1) {
-                throw IllegalArgumentException("Include field $include_field not found")
+        for (includeField in webObject.include_fields) {
+            val includeIndex = fields.indexOfFirst { it.name == includeField }
+            if (includeIndex == -1) {
+                throw IllegalArgumentException("Include field $includeField not found")
             }
-            fields += ref_object.fields[include_index]
+            fields += ref_object.fields[includeIndex]
         }
-        val webObjectString = webGenerateDataClass(webObject.ref_object, webObject.ref_object, fields)
-        File("$path/web/model/${webObject.ref_object}.kt").writeText(webObjectString)
+        val webObjectString =
+            webGenerateDataClass(
+                webObject.ref_object,
+                webModelPackage.joinToString("."),
+                dataModelPackage.joinToString("."),
+                webObject.ref_object,
+                fields
+            )
+        File("$webObjectPath/${webObject.ref_object}.kt").writeText(webObjectString)
     }
 
-    File("$path/data/model").mkdirs()
+    File(dataPathname).mkdirs()
     for (dataObject in schema.data_objects) {
-        val dataObjectString = dataGenerateDataClass(dataObject.name, dataObject.fields)
-        File("$path/data/model/${dataObject.name}.kt").writeText(dataObjectString)
+        val dataObjectString =
+            dataGenerateDataClass(dataObject.name, dataModelPackage.joinToString("."), dataObject.fields)
+        File("$dataPathname/${dataObject.name}.kt").writeText(dataObjectString)
     }
 
 }
