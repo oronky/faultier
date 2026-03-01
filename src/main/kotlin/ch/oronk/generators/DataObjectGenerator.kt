@@ -10,6 +10,12 @@ fun dataGenerateDataClass(className: String, packageName: String, fields: List<F
     stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table\n")
     stringBuilder.appendLine("import kotlin.uuid.ExperimentalUuidApi\n")
 
+    stringBuilder.appendLine("data class ${className}Entity (")
+    stringBuilder.appendLine("  val id: String,")
+    fields.forEach { field ->
+        stringBuilder.appendLine("    val ${field.name} : ${dataClassTypeConverter(field.type)},")
+    }
+    stringBuilder.appendLine(")")
 
     // Add data class declaration
     stringBuilder.appendLine("object $className : Table() {\n")
@@ -35,6 +41,14 @@ private fun fieldTypeConvert(fieldType: String, name: String): String {
     return when (fieldType) {
         "string" -> "varchar(\"$name\", 255)"
         "int" -> "integer(\"$name\")"
+        else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
+    }
+}
+
+private fun dataClassTypeConverter(fieldType: String): String {
+    return when (fieldType) {
+        "string" -> "String"
+        "int" -> "Int"
         else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }

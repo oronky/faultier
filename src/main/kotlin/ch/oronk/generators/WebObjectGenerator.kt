@@ -19,7 +19,7 @@ fun webGenerateDataClass(className: String, packageName: String, dataPackageName
     stringBuilder.appendLine(") {\n")
     // Add copyFrom method
     stringBuilder.appendLine()
-    stringBuilder.appendLine("    fun copyFrom(other: $dataPackageName.$refClassName): $className {\n")
+    stringBuilder.appendLine("    fun copyFrom(other: $dataPackageName.${refClassName}Entity): $className {\n")
     stringBuilder.appendLine("        return copy(")
 
     fields.forEachIndexed { index, field ->
