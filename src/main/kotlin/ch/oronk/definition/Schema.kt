@@ -28,6 +28,6 @@ data class WebObject(
     val ref_object: String,
     val path: String,
     val methods: List<String>,
-    val exclude_fields: List<String>,
-    val include_fields: List<String>
+    var exclude_fields: List<String> = emptyList(),
+    var include_fields: List<String> = emptyList()
 )

@@ -2,7 +2,7 @@ package org.example.ch.oronk.generators
 
 import org.example.ch.oronk.definition.Field
 
-fun generateDataClass(className: String, fields: List<Field>): String {
+fun webGenerateDataClass(className: String, refClassName: String, fields: List<Field>): String {
     val stringBuilder = StringBuilder()
 
     // Add data class declaration
@@ -16,15 +16,28 @@ fun generateDataClass(className: String, fields: List<Field>): String {
         stringBuilder.appendLine("    val ${field.name}: ${fieldTypeConvert(field.type)}$nullableSuffix$comma")
     }
 
-    stringBuilder.appendLine(")")
+    stringBuilder.appendLine(") {")
+    // Add copyFrom method
+    stringBuilder.appendLine()
+    stringBuilder.appendLine("    fun copyFrom(other: $refClassName): $className {")
+    stringBuilder.appendLine("        return copy(")
+
+    fields.forEachIndexed { index, field ->
+        val comma = if (index < fields.size - 1) "," else ""
+        stringBuilder.appendLine("            ${field.name} = other.${field.name}$comma")
+    }
+
+    stringBuilder.appendLine("        )")
+    stringBuilder.appendLine("    }")
+    stringBuilder.appendLine("}")
 
     return stringBuilder.toString()
 }
 
-fun fieldTypeConvert(fieldType: String): String {
+private fun fieldTypeConvert(fieldType: String): String {
     return when (fieldType) {
-        "String" -> "String"
-        "Int" -> "Int"
-        else -> throw IllegalArgumentException("fieldType ${fieldType} not allowed.")
+        "string" -> "String"
+        "int" -> "Int"
+        else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }
