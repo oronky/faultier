@@ -20,9 +20,15 @@
   ],
   "web_objects": [
     {
-      "methods": ["GET, POST"],
+      "endpoints": [
+        {
+          "method": "GET",
+          "plural": true,
+          "filterParams": ["id"]
+        }
+      ],
       "ref_object": "Test",
-      "path": "/api/",
+      "path": "api",
       "exclude_fields": [
         "gender"
       ],

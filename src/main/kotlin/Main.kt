@@ -1,10 +1,40 @@
 package org.example
 
+import ch.oronk.data.model.Test
+import io.ktor.http.HttpStatusCode
+import io.ktor.server.application.call
+import io.ktor.server.response.respond
+import io.ktor.server.routing.Route
+import io.ktor.server.routing.get
+import io.ktor.server.routing.route
 import kotlinx.serialization.json.Json
 import org.example.ch.oronk.definition.SchemaDefinition
 import org.example.ch.oronk.generators.dataGenerateDataClass
 import org.example.ch.oronk.generators.webGenerateDataClass
+import org.jetbrains.exposed.v1.core.eq
+import org.jetbrains.exposed.v1.jdbc.select
 import java.io.File
+
+fun Route.main() {
+    route("/") {
+        get("api"){
+            val select = Test.select(Test.email eq "test")
+                .singleOrNull()
+            if(select == null) {
+                call.respond(HttpStatusCode.NotFound)
+                return@get
+            }
+
+            ch.oronk.web.model.Test(
+                email = "test",
+
+            )
+            val email: String = select[Test.email]
+
+            call.respond("Hello World!")
+        }
+    }
+}
 
 fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)

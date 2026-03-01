@@ -27,7 +27,14 @@ data class Field(
 data class WebObject(
     val ref_object: String,
     val path: String,
-    val methods: List<String>,
+    val endpoints: List<Endpoint>,
     var exclude_fields: List<String> = emptyList(),
     var include_fields: List<String> = emptyList()
+)
+
+@Serializable
+data class Endpoint(
+    val method: String,
+    val plural: Boolean = false,
+    var filterParams: List<String> = emptyList(),
 )
