@@ -26,7 +26,7 @@ fun Route.main() {
             }
 
             ch.oronk.web.model.Test(
-                email = "test",
+                email = select["email"],
 
             )
             val email: String = select[Test.email]

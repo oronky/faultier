@@ -7,7 +7,7 @@ fun webGenerateDataClass(className: String, packageName: String, dataPackageName
     stringBuilder.append("package $packageName\n")
     // Add data class declaration
     stringBuilder.appendLine("data class $className(")
-
+    stringBuilder.appendLine("  val id: String,")
     // Add fields
     fields.forEachIndexed { index, field ->
         val nullableSuffix = if (!field.required) "?" else ""

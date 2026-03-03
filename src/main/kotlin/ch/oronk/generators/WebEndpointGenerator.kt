@@ -1,6 +1,7 @@
 package org.example.ch.oronk.generators
 
 import org.example.ch.oronk.definition.Endpoint
+import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.WebObject
 
 fun webEndpointGenerator(
@@ -40,7 +41,7 @@ private fun routeString(webObject: WebObject, dataPackage: String, webPackage: S
     }
 }
 
-private fun routeGet(webObject: WebObject, dataPackage: String, webPackage: String, endpoint: Endpoint): String {
+private fun routeGet(webObject: WebObject, fields: List<Field>, dataPackage: String, webPackage: String, endpoint: Endpoint): String {
     val stringBuilder = StringBuilder()
     val pluralSuffix = if (endpoint.plural) "s" else ""
     stringBuilder.appendLine("  get(\"${webObject.path}/${webObject.ref_object.lowercase()}$pluralSuffix\") {)")
@@ -56,13 +57,18 @@ private fun routeGet(webObject: WebObject, dataPackage: String, webPackage: Stri
 
     } else {
         stringBuilder.appendLine("""
-        .singleOrNull()
-        if(select == null) {
-            call.respond(HttpStatusCode.NotFound)
-            return@get
-        }
-        
+    .singleOrNull()
+    if(select == null) {
+        call.respond(HttpStatusCode.NotFound)
+        return@get
+    }
     """)
+        stringBuilder.appendLine("  val returnObj = ${webObject.returnObj}(")
+        stringBuilder.appendLine("  id = select[\"id\"],")
+        fields.forEach { field ->
+            stringBuilder.appendLine("  ${field.name} = select[\"${field.name}\",")
+        }
+
     }
     stringBuilder.appendLine()
 }
