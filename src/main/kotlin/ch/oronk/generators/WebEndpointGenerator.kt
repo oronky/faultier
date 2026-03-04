@@ -63,12 +63,13 @@ private fun routeGet(webObject: WebObject, fields: List<Field>, dataPackage: Str
         return@get
     }
     """)
-        stringBuilder.appendLine("  val returnObj = ${webObject.returnObj}(")
+        stringBuilder.appendLine("  val returnObj = ${webObject.ref_object}(")
         stringBuilder.appendLine("  id = select[\"id\"],")
         fields.forEach { field ->
             stringBuilder.appendLine("  ${field.name} = select[\"${field.name}\",")
         }
+        stringBuilder.appendLine(" )")
 
     }
-    stringBuilder.appendLine()
+    return stringBuilder.toString()
 }
