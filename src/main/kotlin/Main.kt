@@ -1,40 +1,28 @@
 package org.example
 
-import ch.oronk.data.model.Test
-import io.ktor.http.HttpStatusCode
-import io.ktor.server.application.call
-import io.ktor.server.response.respond
-import io.ktor.server.routing.Route
-import io.ktor.server.routing.get
-import io.ktor.server.routing.route
+import io.netty.util.internal.RecyclableArrayList
 import kotlinx.serialization.json.Json
+import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.SchemaDefinition
+import org.example.ch.oronk.definition.WebObject
 import org.example.ch.oronk.generators.dataGenerateDataClass
+import org.example.ch.oronk.generators.webEndpointGenerator
 import org.example.ch.oronk.generators.webGenerateDataClass
-import org.jetbrains.exposed.v1.core.eq
-import org.jetbrains.exposed.v1.jdbc.select
 import java.io.File
 
+/*
 fun Route.main() {
     route("/") {
         get("api"){
             val select = Test.select(Test.email eq "test")
-                .singleOrNull()
-            if(select == null) {
-                call.respond(HttpStatusCode.NotFound)
-                return@get
-            }
-
-            ch.oronk.web.model.Test(
-                email = select["email"],
-
-            )
-            val email: String = select[Test.email]
+                select.toList().map { e ->
+                    Test()
+                }
 
             call.respond("Hello World!")
         }
     }
-}
+} */
 
 fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)
@@ -43,12 +31,15 @@ fun main() {
     val path = "E:/Programmieren/Faultier/test"
 
     val webModelPackage = listOf("ch", "oronk", "web", "model")
+    val webEndpointPackage = listOf("ch", "oronk", "web", "endpoint")
     val dataModelPackage = listOf("ch", "oronk", "data", "model")
 
 
     val webObjectPath = "$path/" + webModelPackage.joinToString("/")
     val dataPathname = "$path/" + dataModelPackage.joinToString("/")
+    val webEndpointPath = "$path/" + webEndpointPackage.joinToString("/")
 
+    val webObjectFieldList = ArrayList<Pair<WebObject, List<Field>>>()
     File(webObjectPath).mkdirs()
     for (webObject in schema.web_objects) {
         var ref_object = db_object_by_name[webObject.ref_object]
@@ -82,6 +73,7 @@ fun main() {
                 webObject.ref_object,
                 fields
             )
+        webObjectFieldList.add(Pair(webObject, fields))
         File("$webObjectPath/${webObject.ref_object}.kt").writeText(webObjectString)
     }
 
@@ -91,6 +83,16 @@ fun main() {
             dataGenerateDataClass(dataObject.name, dataModelPackage.joinToString("."), dataObject.fields)
         File("$dataPathname/${dataObject.name}.kt").writeText(dataObjectString)
     }
+
+    val endpointString = webEndpointGenerator(
+        webObjectFieldList,
+        dataModelPackage.joinToString("."),
+        webModelPackage.joinToString("."),
+        webEndpointPackage.joinToString(".")
+    )
+
+    File(webEndpointPath).mkdirs()
+    File("$webEndpointPath/Endpoints.kt").writeText(endpointString)
 
 }
 
@@ -102,7 +104,7 @@ var testJson = """
       "fields": [
         {
           "name": "email",
-          "type": "string",
+          "type": "int",
           "required": true,
           "fk": "Table.id"
         },
@@ -117,13 +119,20 @@ var testJson = """
   ],
   "web_objects": [
     {
-      "methods": ["GET, POST"],
+      "endpoints": [
+        {
+          "method": "GET",
+          "plural": true,
+          "filterParams": ["id"]
+        }
+      ],
       "ref_object": "Test",
-      "path": "/api/",
+      "path": "api",
       "exclude_fields": [
         "gender"
       ]
     }
   ]
 }
+
 """

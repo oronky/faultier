@@ -1,7 +1,7 @@
 {
   "data_objects": [
     {
-      "name": "test",
+      "name": "Test",
       "fields": [
         {
           "name": "email",
@@ -31,9 +31,6 @@
       "path": "api",
       "exclude_fields": [
         "gender"
-      ],
-      "include_fields": [
-        "email"
       ]
     }
   ]
