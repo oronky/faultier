@@ -6,6 +6,7 @@ import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.SchemaDefinition
 import org.example.ch.oronk.definition.WebObject
 import org.example.ch.oronk.generators.dataGenerateDataClass
+import org.example.ch.oronk.generators.generateMain
 import org.example.ch.oronk.generators.webEndpointGenerator
 import org.example.ch.oronk.generators.webGenerateDataClass
 import java.io.File
@@ -28,16 +29,17 @@ fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)
     val db_object_by_name = schema.data_objects.map { it.name to it }.toMap()
 
-    val path = "./test"
+    val path = "./src/main/kotlin"
 
     val webModelPackage = listOf("ch", "oronk", "web", "model")
     val webEndpointPackage = listOf("ch", "oronk", "web", "endpoint")
     val dataModelPackage = listOf("ch", "oronk", "data", "model")
-
+    val mainPackage = listOf("ch", "oronk")
 
     val webObjectPath = "$path/" + webModelPackage.joinToString("/")
     val dataPathname = "$path/" + dataModelPackage.joinToString("/")
     val webEndpointPath = "$path/" + webEndpointPackage.joinToString("/")
+    val mainPath = "$path/${mainPackage.joinToString("/")}"
 
     val webObjectFieldList = ArrayList<Pair<WebObject, List<Field>>>()
     File(webObjectPath).mkdirs()
@@ -94,6 +96,15 @@ fun main() {
     File(webEndpointPath).mkdirs()
     File("$webEndpointPath/Endpoints.kt").writeText(endpointString)
 
+    val mainString = generateMain(
+        mainPackage.joinToString("."),
+        webEndpointPackage.joinToString("."),
+        dataModelPackage.joinToString("."),
+        "database",
+        schema.data_objects
+    )
+    File(mainPath).mkdirs()
+    File("${mainPath}/App.kt").writeText(mainString)
 }
 
 var testJson = """

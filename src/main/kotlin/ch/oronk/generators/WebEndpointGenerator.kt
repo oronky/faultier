@@ -25,6 +25,7 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.route
 import io.ktor.http.HttpStatusCode
 
+import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
     """
@@ -91,7 +92,7 @@ private fun routeGet(
             
     """
     )
-    stringBuilder.appendLine("      val query = $dataPackage.${webObject.ref_object}")
+    stringBuilder.appendLine("      val query = transaction { $dataPackage.${webObject.ref_object}")
     if (endpoint.filterParams.isNotEmpty()) {
         val selectString =
             endpoint.filterParams
@@ -104,7 +105,8 @@ private fun routeGet(
     if (endpoint.plural) {
         stringBuilder.appendLine(
             """
-    .toList()
+    .toList() 
+    }
     val returnObj = query.map { e -> 
         $webObjectClass(
             id = e.get(${dataObjectClass}.id).toString(),
@@ -121,6 +123,7 @@ private fun routeGet(
         stringBuilder.appendLine(
             """
     .singleOrNull()
+    }
     if(query == null) {
         call.respond(HttpStatusCode.NotFound)
         return@get
@@ -140,6 +143,7 @@ private fun routeGet(
     stringBuilder.appendLine("}")
     return stringBuilder.toString()
 }
+
 
 private fun generateConvertParamString(param: String, toType: String): String {
     return when (toType) {

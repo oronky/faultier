@@ -15,10 +15,12 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.10.0")
     implementation("org.jetbrains.exposed:exposed-core:1.1.1")
     implementation("org.jetbrains.exposed:exposed-jdbc:1.1.1")
-    implementation("io.ktor:ktor-server-core-jvm:2.3.7")
-    implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
-    implementation("io.ktor:ktor-serialization-gson:2.3.7")
+    implementation("io.ktor:ktor-server-core-jvm:3.4.1")
+    implementation("io.ktor:ktor-server-netty-jvm:3.4.1")
+    implementation("io.ktor:ktor-serialization-gson:3.4.1")
+    implementation("io.ktor:ktor-server-content-negotiation:3.4.1")
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
+    implementation("org.slf4j:slf4j-simple:2.0.13")
 }
 
 kotlin {
