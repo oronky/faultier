@@ -23,7 +23,7 @@
       "endpoints": [
         {
           "method": "GET",
-          "plural": true,
+          "plural": false,
           "filterParams": ["id"]
         }
       ],

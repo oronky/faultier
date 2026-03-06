@@ -18,6 +18,7 @@ dependencies {
     implementation("io.ktor:ktor-server-core-jvm:2.3.7")
     implementation("io.ktor:ktor-server-netty-jvm:2.3.7")
     implementation("io.ktor:ktor-serialization-gson:2.3.7")
+    implementation("org.xerial:sqlite-jdbc:3.44.1.0")
 }
 
 kotlin {

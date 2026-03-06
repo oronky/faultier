@@ -28,7 +28,7 @@ fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)
     val db_object_by_name = schema.data_objects.map { it.name to it }.toMap()
 
-    val path = "E:/Programmieren/Faultier/test"
+    val path = "./test"
 
     val webModelPackage = listOf("ch", "oronk", "web", "model")
     val webEndpointPackage = listOf("ch", "oronk", "web", "endpoint")
@@ -122,7 +122,7 @@ var testJson = """
       "endpoints": [
         {
           "method": "GET",
-          "plural": true,
+          "plural": false,
           "filterParams": ["id"]
         }
       ],

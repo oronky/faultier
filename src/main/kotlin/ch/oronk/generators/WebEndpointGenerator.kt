@@ -99,16 +99,18 @@ private fun routeGet(
                 .joinToString(" and ")
         stringBuilder.appendLine("      .select($selectString)")
     }
+    val webObjectClass = "$webPackage.${webObject.ref_object}"
+    val dataObjectClass = "$dataPackage.${webObject.ref_object}"
     if (endpoint.plural) {
         stringBuilder.appendLine(
             """
     .toList()
     val returnObj = query.map { e -> 
-        $webPackage.${webObject.ref_object}(
-            id = e["id"],
+        $webObjectClass(
+            id = e.get(${dataObjectClass}.id).toString(),
             ${
                 fields.map { field ->
-                    "${field.name} = e[\"${field.name}\"],"
+                    "${field.name} = e.get($dataObjectClass.${field.name}).${rowToTypeSuffix(field.type)},"
                 }.joinToString("\n")
             }
         )
@@ -125,10 +127,10 @@ private fun routeGet(
     }
     """
         )
-        stringBuilder.appendLine("  val returnObj = $webPackage.${webObject.ref_object}(")
-        stringBuilder.appendLine("  id = query[\"id\"],")
+        stringBuilder.appendLine("  val returnObj = $webObjectClass(")
+        stringBuilder.appendLine("  id = query.get(${dataObjectClass}.id).toString(),")
         fields.forEach { field ->
-            stringBuilder.appendLine("  ${field.name} = select[\"${field.name}\",")
+            stringBuilder.appendLine("  ${field.name} = query.get($dataObjectClass.${field.name}).${rowToTypeSuffix(field.type)},")
         }
         stringBuilder.appendLine(" )")
 
@@ -148,6 +150,14 @@ private fun generateConvertParamString(param: String, toType: String): String {
         }
         "string" -> param
         "uuid" -> "Uuid.parse($param)"
+        else -> throw IllegalArgumentException("Unsupported type $toType")
+    }
+}
+
+private fun rowToTypeSuffix(toType: String): String {
+    return when (toType) {
+        "int" -> "toInt()"
+        "string", "uuid" -> "toString()"
         else -> throw IllegalArgumentException("Unsupported type $toType")
     }
 }
