@@ -11,19 +11,6 @@ import org.example.ch.oronk.generators.webEndpointGenerator
 import org.example.ch.oronk.generators.webGenerateDataClass
 import java.io.File
 
-/*
-fun Route.main() {
-    route("/") {
-        get("api"){
-            val select = Test.select(Test.email eq "test")
-                select.toList().map { e ->
-                    Test()
-                }
-
-            call.respond("Hello World!")
-        }
-    }
-} */
 
 fun main() {
     val schema = Json.decodeFromString<SchemaDefinition>(testJson)
@@ -133,8 +120,16 @@ var testJson = """
       "endpoints": [
         {
           "method": "GET",
+          "plural": true
+        },
+        {
+          "method": "GET",
           "plural": false,
           "filterParams": ["id"]
+        },
+        {
+          "method": "POST",
+          "plural": false
         }
       ],
       "ref_object": "Test",

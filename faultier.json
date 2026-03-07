@@ -23,8 +23,16 @@
       "endpoints": [
         {
           "method": "GET",
+          "plural": true
+        },
+        {
+          "method": "GET",
           "plural": false,
           "filterParams": ["id"]
+        },
+        {
+          "method": "POST",
+          "plural": false
         }
       ],
       "ref_object": "Test",

@@ -4,6 +4,7 @@ import com.sun.tools.javac.code.TypeAnnotationPosition.field
 import org.example.ch.oronk.definition.Endpoint
 import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.WebObject
+import org.jetbrains.exposed.v1.jdbc.insert
 import kotlin.uuid.ExperimentalUuidApi
 
 fun webEndpointGenerator(
@@ -24,10 +25,13 @@ import io.ktor.server.application.call
 import io.ktor.server.response.respond
 import io.ktor.server.routing.route
 import io.ktor.http.HttpStatusCode
+import io.ktor.server.routing.post
 
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
+import org.jetbrains.exposed.v1.jdbc.insert
+import org.jetbrains.exposed.v1.jdbc.selectAll
     """
     stringBuilder.appendLine("package $packageName\n")
     stringBuilder.appendLine(imports)
@@ -53,6 +57,7 @@ private fun routeString(
 ): String {
     return when (endpoint.method) {
         "GET" -> routeGet(webObject, fields, dataPackage, webPackage, endpoint)
+        "POST" -> postRoute(webObject, fields, dataPackage, webPackage, endpoint)
         else -> throw IllegalArgumentException("Unsupported endpoint method ${endpoint.method}")
     }
 }
@@ -67,7 +72,7 @@ private fun routeGet(
     val stringBuilder = StringBuilder()
     val pluralSuffix = if (endpoint.plural) "s" else ""
     stringBuilder.appendLine("      get(\"${webObject.path}/${webObject.ref_object.lowercase()}$pluralSuffix\") {")
-    val fieldNameMap = fields.associate{it.name to it.type}.toMutableMap()
+    val fieldNameMap = fields.associate { it.name to it.type }.toMutableMap()
     fieldNameMap["id"] = "uuid"
     stringBuilder.appendLine(
         """
@@ -93,12 +98,13 @@ private fun routeGet(
     """
     )
     stringBuilder.appendLine("      val query = transaction { $dataPackage.${webObject.ref_object}")
+    stringBuilder.appendLine("      .selectAll()")
     if (endpoint.filterParams.isNotEmpty()) {
         val selectString =
             endpoint.filterParams
                 .map { param -> "($dataPackage.${webObject.ref_object}.${param} eq ${param}Param)" }
                 .joinToString(" and ")
-        stringBuilder.appendLine("      .select($selectString)")
+        stringBuilder.appendLine("      .where{ $selectString }")
     }
     val webObjectClass = "$webPackage.${webObject.ref_object}"
     val dataObjectClass = "$dataPackage.${webObject.ref_object}"
@@ -133,7 +139,13 @@ private fun routeGet(
         stringBuilder.appendLine("  val returnObj = $webObjectClass(")
         stringBuilder.appendLine("  id = query.get(${dataObjectClass}.id).toString(),")
         fields.forEach { field ->
-            stringBuilder.appendLine("  ${field.name} = query.get($dataObjectClass.${field.name}).${rowToTypeSuffix(field.type)},")
+            stringBuilder.appendLine(
+                "  ${field.name} = query.get($dataObjectClass.${field.name}).${
+                    rowToTypeSuffix(
+                        field.type
+                    )
+                },"
+            )
         }
         stringBuilder.appendLine(" )")
 
@@ -144,6 +156,50 @@ private fun routeGet(
     return stringBuilder.toString()
 }
 
+private fun postRoute(
+    webObject: WebObject,
+    fields: List<Field>,
+    dataPackage: String,
+    webPackage: String,
+    endpoint: Endpoint
+): String {
+
+    val pluralSuffix = if (endpoint.plural) "s" else ""
+    return """
+        post("${webObject.path}/${webObject.ref_object.lowercase()}$pluralSuffix") {
+            ${
+        if (endpoint.plural) {
+            """
+            val obj${webObject.ref_object} = call.receive<List<${webPackage}.${webObject.ref_object}>>()
+            transaction {
+                $dataPackage.${webObject.ref_object}.batchInsert(obj${webObject.ref_object}) { 
+                ${
+                fields.map { field ->
+                    "this[$dataPackage${webObject.ref_object}.${field.name}] = it.${field.name}"
+                }
+            }
+                }
+            }
+            """.trimIndent()
+        } else {
+
+            """
+            val obj${webObject.ref_object} = call.receive<${webPackage}.${webObject.ref_object}>()
+            transaction {
+            ${dataPackage}.${webObject.ref_object}.insert{
+                ${
+                fields.map { field ->
+                    "it[${dataPackage}.${webObject.ref_object}.${field.name}]=obj${webObject.ref_object}.${field.name}"
+                }.joinToString("\n")
+            }   }
+            }
+            """.trimIndent()
+        }
+    }
+    call.respond(HttpStatusCode.Created)
+    }
+    """.trimIndent()
+}
 
 private fun generateConvertParamString(param: String, toType: String): String {
     return when (toType) {
