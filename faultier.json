@@ -1,4 +1,13 @@
 {
+  "auth" : {
+    "ref_object": "Test",
+    "exclude_fields": [
+      "gender"
+    ],
+    "include_fields": [
+      "dingdong"
+    ]
+  },
   "data_objects": [
     {
       "name": "Test",

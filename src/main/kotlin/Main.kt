@@ -2,10 +2,12 @@ package org.example
 
 import io.netty.util.internal.RecyclableArrayList
 import kotlinx.serialization.json.Json
+import org.example.ch.oronk.definition.DataObject
 import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.SchemaDefinition
 import org.example.ch.oronk.definition.WebObject
 import org.example.ch.oronk.generators.dataGenerateDataClass
+import org.example.ch.oronk.generators.generateAuthUser
 import org.example.ch.oronk.generators.generateMain
 import org.example.ch.oronk.generators.webEndpointGenerator
 import org.example.ch.oronk.generators.webGenerateDataClass
@@ -38,22 +40,8 @@ fun main() {
         if (webObject.exclude_fields.isNotEmpty() and webObject.include_fields.isNotEmpty()) {
             throw IllegalArgumentException("You cant exclude and include fields at the same time. Just do one.")
         }
-        val fields = (if (webObject.exclude_fields.isNotEmpty()) ref_object.fields else emptyList()).toMutableList()
-        for (exclude_field in webObject.exclude_fields) {
-            val exclude_index = fields.indexOfFirst { it.name == exclude_field }
-            if (exclude_index == -1) {
-                throw IllegalArgumentException("Exclude field $exclude_field not found")
-            }
-            fields.drop(exclude_index)
-        }
 
-        for (includeField in webObject.include_fields) {
-            val includeIndex = fields.indexOfFirst { it.name == includeField }
-            if (includeIndex == -1) {
-                throw IllegalArgumentException("Include field $includeField not found")
-            }
-            fields += ref_object.fields[includeIndex]
-        }
+        val fields = fields(webObject.exclude_fields, webObject.include_fields, ref_object)
         val webObjectString =
             webGenerateDataClass(
                 webObject.ref_object,
@@ -92,6 +80,47 @@ fun main() {
     )
     File(mainPath).mkdirs()
     File("${mainPath}/App.kt").writeText(mainString)
+
+
+}
+
+fun setupAuth(schema: SchemaDefinition) {
+    val authPackage = listOf("ch", "oronk", "auth")
+    val authPackageString = authPackage.joinToString(".")
+    val authObj = schema.auth ?: return
+    val refObj = schema.data_objects.find { it.name == authObj.ref_object }
+    if (refObj == null) {
+        throw IllegalArgumentException("No reference object found for Auth ${authObj.ref_object}.")
+    }
+    if (authObj.exclude_fields.isNotEmpty() && authObj.include_fields.isNotEmpty()) {
+        throw IllegalArgumentException("You cant exclude and include fields at the same time. Auth")
+    }
+
+    val fields = fields(authObj.exclude_fields, authObj.include_fields, refObj)
+
+
+    val authUserString = generateAuthUser( refObj.name, fields)
+    refObj.fields
+}
+
+fun fields(excludeFields: List<String>, includeFields: List<String>, ref_object: DataObject): MutableList<Field> {
+    val fields = (if (excludeFields.isNotEmpty()) ref_object.fields else emptyList()).toMutableList()
+    for (exclude_field in excludeFields) {
+        val exclude_index = fields.indexOfFirst { it.name == exclude_field }
+        if (exclude_index == -1) {
+            throw IllegalArgumentException("Exclude field $exclude_field not found")
+        }
+        fields.drop(exclude_index)
+    }
+
+    for (includeField in includeFields) {
+        val includeIndex = fields.indexOfFirst { it.name == includeField }
+        if (includeIndex == -1) {
+            throw IllegalArgumentException("Include field $includeField not found")
+        }
+        fields += ref_object.fields[includeIndex]
+    }
+    return fields
 }
 
 var testJson = """

@@ -5,8 +5,16 @@ import kotlinx.serialization.json.Json
 
 @Serializable
 data class SchemaDefinition(
+    val auth: Auth? = null,
     val data_objects: List<DataObject>,
     val web_objects: List<WebObject>
+)
+
+@Serializable
+data class Auth(
+    val ref_object: String,
+    val exclude_fields: List<String> = emptyList(),
+    val include_fields: List<String> = emptyList()
 )
 
 @Serializable
@@ -28,13 +36,13 @@ data class WebObject(
     val ref_object: String,
     val path: String,
     val endpoints: List<Endpoint>,
-    var exclude_fields: List<String> = emptyList(),
-    var include_fields: List<String> = emptyList()
+    val exclude_fields: List<String> = emptyList(),
+    val include_fields: List<String> = emptyList()
 )
 
 @Serializable
 data class Endpoint(
     val method: String,
     val plural: Boolean = false,
-    var filterParams: List<String> = emptyList(),
+    val filterParams: List<String> = emptyList(),
 )
