@@ -26,8 +26,10 @@ import io.ktor.server.response.respond
 import io.ktor.server.routing.route
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.post
+import io.ktor.server.request.receive
 
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+import org.jetbrains.exposed.v1.jdbc.batchInsert
 import org.jetbrains.exposed.v1.core.eq
 import org.jetbrains.exposed.v1.jdbc.select
 import org.jetbrains.exposed.v1.jdbc.insert
@@ -175,8 +177,9 @@ private fun postRoute(
                 $dataPackage.${webObject.ref_object}.batchInsert(obj${webObject.ref_object}) { 
                 ${
                 fields.map { field ->
-                    "this[$dataPackage${webObject.ref_object}.${field.name}] = it.${field.name}"
-                }
+                    "this[$dataPackage.${webObject.ref_object}.${field.name}] = it.${field.name}"
+                }.joinToString("\n" +
+                        "")
             }
                 }
             }

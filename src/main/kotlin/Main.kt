@@ -129,7 +129,7 @@ var testJson = """
         },
         {
           "method": "POST",
-          "plural": false
+          "plural": true 
         }
       ],
       "ref_object": "Test",
