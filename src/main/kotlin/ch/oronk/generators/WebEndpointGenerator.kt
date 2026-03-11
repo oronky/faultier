@@ -212,7 +212,14 @@ private fun generateConvertParamString(param: String, toType: String): String {
         """.trimIndent()
         }
         "string" -> param
-        "uuid" -> "Uuid.parse($param)"
+        "uuid" -> """
+            Uuid.parse(${param})
+            if (${param} == null) {
+                call.respond(HttpStatusCode.BadRequest, "idParam needs to be type uuid")
+                return@get
+            }
+
+        """.trimIndent()
         else -> throw IllegalArgumentException("Unsupported type $toType")
     }
 }

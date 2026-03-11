@@ -24,7 +24,7 @@ fun dataGenerateDataClass(className: String, packageName: String, fields: List<F
     // Add fields
     fields.forEachIndexed { index, field ->
         val nullableSuffix = if (!field.required) ".nullable()" else ""
-        val foreignKeySuffix = if (field.fk == null) "references(${field.fk})" else ""
+        val foreignKeySuffix = if (field.fk != null) ".references(${field.fk})" else ""
 
         stringBuilder.appendLine("    val ${field.name} = ${fieldTypeConvert(field.type, field.name)}$nullableSuffix$foreignKeySuffix\n")
     }
@@ -41,6 +41,7 @@ private fun fieldTypeConvert(fieldType: String, name: String): String {
     return when (fieldType) {
         "string" -> "varchar(\"$name\", 255)"
         "int" -> "integer(\"$name\")"
+        "uuid" -> "uuid(\"$name\")"
         else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }
@@ -49,6 +50,7 @@ private fun dataClassTypeConverter(fieldType: String): String {
     return when (fieldType) {
         "string" -> "String"
         "int" -> "Int"
+        "uuid" -> "Uuid"
         else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }

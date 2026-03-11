@@ -1,16 +1,11 @@
 package org.example
 
-import io.netty.util.internal.RecyclableArrayList
 import kotlinx.serialization.json.Json
 import org.example.ch.oronk.definition.DataObject
 import org.example.ch.oronk.definition.Field
 import org.example.ch.oronk.definition.SchemaDefinition
 import org.example.ch.oronk.definition.WebObject
-import org.example.ch.oronk.generators.dataGenerateDataClass
-import org.example.ch.oronk.generators.generateAuthUser
-import org.example.ch.oronk.generators.generateMain
-import org.example.ch.oronk.generators.webEndpointGenerator
-import org.example.ch.oronk.generators.webGenerateDataClass
+import org.example.ch.oronk.generators.*
 import java.io.File
 
 
@@ -81,12 +76,13 @@ fun main() {
     File(mainPath).mkdirs()
     File("${mainPath}/App.kt").writeText(mainString)
 
-
+    setupAuth(schema, path, dataModelPackage.joinToString("."))
 }
 
-fun setupAuth(schema: SchemaDefinition) {
+fun setupAuth(schema: SchemaDefinition, path: String, dataPackage: String) {
     val authPackage = listOf("ch", "oronk", "auth")
     val authPackageString = authPackage.joinToString(".")
+    val authPath = "$path/${authPackage.joinToString("/")}"
     val authObj = schema.auth ?: return
     val refObj = schema.data_objects.find { it.name == authObj.ref_object }
     if (refObj == null) {
@@ -98,18 +94,20 @@ fun setupAuth(schema: SchemaDefinition) {
 
     val fields = fields(authObj.exclude_fields, authObj.include_fields, refObj)
 
+    val authString = generateAuthString(authObj, authPackageString, dataPackage,  fields)
 
-    refObj.fields
+    File(authPath).mkdirs()
+    File("${authPath}/Auth.kt").writeText(authString)
 }
 
-fun fields(excludeFields: List<String>, includeFields: List<String>, ref_object: DataObject): MutableList<Field> {
-    val fields = (if (excludeFields.isNotEmpty()) ref_object.fields else emptyList()).toMutableList()
+fun fields(excludeFields: List<String>, includeFields: List<String>, ref_object: DataObject): List<Field> {
+    val fields = (if (includeFields.isEmpty()) ref_object.fields else emptyList()).toMutableList()
     for (exclude_field in excludeFields) {
         val exclude_index = fields.indexOfFirst { it.name == exclude_field }
         if (exclude_index == -1) {
             throw IllegalArgumentException("Exclude field $exclude_field not found")
         }
-        fields.drop(exclude_index)
+        fields.removeAt(exclude_index)
     }
 
     for (includeField in includeFields) {
@@ -124,21 +122,39 @@ fun fields(excludeFields: List<String>, includeFields: List<String>, ref_object:
 
 var testJson = """
 {
+  "auth" : {
+    "ref_object": "User",
+    "pwd_field" : "password"
+  },
   "data_objects": [
+    {
+      "name":  "User",
+      "fields" : [
+        {
+          "name": "password",
+          "type": "string",
+          "required": true
+        } 
+      ]
+    },
     {
       "name": "Test",
       "fields": [
         {
           "name": "email",
           "type": "int",
-          "required": true,
-          "fk": "Table.id"
+          "required": true
         },
         {
           "name": "gender",
           "type": "int",
+          "required": true
+        },
+        {
+          "name": "user",
+          "type": "uuid",
           "required": true,
-          "fk": "Table.id"
+          "fk": "User.id"
         }
       ]
     }

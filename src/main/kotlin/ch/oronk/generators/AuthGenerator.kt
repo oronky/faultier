@@ -3,30 +3,63 @@ package org.example.ch.oronk.generators
 import org.example.ch.oronk.definition.Auth
 import org.example.ch.oronk.definition.Field
 
-fun generateImports(authPackage: String): String {
+fun generateAuthString(auth: Auth, authPackage: String, dataPackage: String, fields: List<Field>): String {
     return """
-        package ${'$'}authPackage
-
-        import io.ktor.server.sessions.Sessions
+        ${generateImports(authPackage)}
+        
+        ${generateAuthUser(fields)}
+        
+        ${generateConfigureSession(authPackage)}
+        
+        ${generateAuthRoute(auth, dataPackage, fields)}
     """.trimIndent()
 }
 
-fun generateAuthUser(fields: List<Field>): String {
+private fun generateImports(authPackage: String): String {
+    return """
+        package $authPackage
+
+        import at.favre.lib.crypto.bcrypt.BCrypt
+        import io.ktor.http.HttpStatusCode
+        import io.ktor.server.application.Application
+        import io.ktor.server.application.install
+        import io.ktor.server.auth.authentication
+        import io.ktor.server.auth.session
+        import io.ktor.server.request.receive
+        import io.ktor.server.response.respond
+        import io.ktor.server.response.respondRedirect
+        import io.ktor.server.routing.Route
+        import io.ktor.server.routing.post
+        import io.ktor.server.routing.route
+        import io.ktor.server.sessions.Sessions
+        import io.ktor.server.sessions.cookie
+        import io.ktor.server.sessions.sessions
+        import kotlinx.serialization.Serializable
+        import org.jetbrains.exposed.v1.jdbc.transactions.transaction
+        import org.jetbrains.exposed.v1.core.eq
+        import org.jetbrains.exposed.v1.jdbc.selectAll
+        import kotlin.uuid.Uuid
+        import kotlin.uuid.ExperimentalUuidApi
+
+    """.trimIndent()
+}
+
+private fun generateAuthUser(fields: List<Field>): String {
     return """
         @Serializable
         data class AuthUser(
-        id: String,
+        val id: String,
         ${
-        fields.map { "val ${it.name}: ${dataClassTypeConverter(it.type)}" }.joinToString(",\n")
+            fields.map { "val ${it.name}: ${dataClassTypeConverter(it.type)}" }.joinToString(",\n")
     }
         ) 
     """.trimIndent()
 }
 
-fun generateConfigureSession(authPackage: String): String {
+private fun generateConfigureSession(authPackage: String): String {
     return """
         
-        fun fun Application.configureSessions() {
+        fun Application.configureSessions() {
             install(Sessions) {
                 cookie<AuthUser>("user_session") {
                     cookie.path = "/"
@@ -52,17 +85,24 @@ fun generateConfigureSession(authPackage: String): String {
     """.trimIndent()
 }
 
-fun generateAuthRoute(auth: Auth, dataPackage: String, fields: List<Field>) : String {
+private fun generateAuthRoute(auth: Auth, dataPackage: String, fields: List<Field>) : String {
     auth.ref_object
     return """
+        @OptIn(ExperimentalUuidApi::class)
         fun Route.authRoutes() {
           route("/auth") {
             post("/login") {
                 val requestAuthUser = call.receive<AuthUser>()    
+                val idParam = Uuid.parseOrNull(requestAuthUser.id) 
+                if (idParam == null) {
+                    call.respond(HttpStatusCode.BadRequest, "idParam needs to be type uuid")
+                    return@post
+                }
+
                 val query = transaction {
                     ${dataPackage}.${auth.ref_object} 
                         .selectAll()
-                        .where { (${dataPackage}.${auth.ref_object}.id eq requestAuthUser.id) }
+                        .where { (${dataPackage}.${auth.ref_object}.id eq idParam) }
                         .singleOrNull()
                 }
                 if (query == null) {
@@ -70,7 +110,7 @@ fun generateAuthRoute(auth: Auth, dataPackage: String, fields: List<Field>) : St
                     return@post
                 }
                 val dbPwd = query[${dataPackage}.${auth.ref_object}.${auth.pwd_field}]
-                if (dbPwd == null && BCrypt.verifyer().verify($dataPackage.${auth.ref_object}.${auth.pwd_field}.toCharArray(), dbPwd)) {
+                if (dbPwd == null && BCrypt.verifyer().verify(AuthUser.${auth.pwd_field}.toCharArray(), dbPwd)) {
                     call.sessions.set(
                         AuthUser(
                             id = query[${dataPackage}.${auth.ref_object}.id],

@@ -5,7 +5,10 @@ import org.example.ch.oronk.definition.Field
 fun webGenerateDataClass(className: String, packageName: String, dataPackageName: String, refClassName: String, fields: List<Field>): String {
     val stringBuilder = StringBuilder()
     stringBuilder.append("package $packageName\n")
+    stringBuilder.appendLine("import kotlin.uuid.ExperimentalUuidApi")
+    stringBuilder.appendLine("import kotlin.uuid.Uuid")
     // Add data class declaration
+    stringBuilder.appendLine("@OptIn(ExperimentalUuidApi::class)")
     stringBuilder.appendLine("data class $className(")
     stringBuilder.appendLine("  val id: String,")
     // Add fields
@@ -38,6 +41,7 @@ private fun fieldTypeConvert(fieldType: String): String {
     return when (fieldType) {
         "string" -> "String"
         "int" -> "Int"
+        "uuid" -> "Uuid"
         else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }
