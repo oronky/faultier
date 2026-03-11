@@ -99,7 +99,6 @@ fun setupAuth(schema: SchemaDefinition) {
     val fields = fields(authObj.exclude_fields, authObj.include_fields, refObj)
 
 
-    val authUserString = generateAuthUser( refObj.name, fields)
     refObj.fields
 }
 

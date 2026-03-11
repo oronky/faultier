@@ -1,6 +1,7 @@
 {
   "auth" : {
     "ref_object": "Test",
+    "pwd_field" : "pwd",
     "exclude_fields": [
       "gender"
     ],

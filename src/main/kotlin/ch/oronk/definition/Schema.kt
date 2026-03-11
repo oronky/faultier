@@ -14,7 +14,8 @@ data class SchemaDefinition(
 data class Auth(
     val ref_object: String,
     val exclude_fields: List<String> = emptyList(),
-    val include_fields: List<String> = emptyList()
+    val include_fields: List<String> = emptyList(),
+    val pwd_field: String,
 )
 
 @Serializable

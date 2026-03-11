@@ -20,11 +20,11 @@ dependencies {
     implementation("io.ktor:ktor-server-netty-jvm:3.4.1")
     implementation("io.ktor:ktor-serialization-gson:3.4.1")
     implementation("io.ktor:ktor-server-auth:3.4.1")
-    implementation("io.ktor:ktor-server-auth-jwt:3.4.1")
     implementation("io.ktor:ktor-server-sessions:3.4.1")
     implementation("io.ktor:ktor-server-content-negotiation:3.4.1")
     implementation("org.xerial:sqlite-jdbc:3.44.1.0")
     implementation("org.slf4j:slf4j-simple:2.0.13")
+    implementation("at.favre.lib:bcrypt:0.10.2")
 }
 
 kotlin {
