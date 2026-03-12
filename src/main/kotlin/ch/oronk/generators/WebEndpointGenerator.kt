@@ -42,7 +42,13 @@ import org.jetbrains.exposed.v1.jdbc.selectAll
     stringBuilder.appendLine("route(\"/\") {")
     webObjects.forEachIndexed { index, (webObject, fields) ->
         webObject.endpoints.forEach { endpoint ->
-            stringBuilder.appendLine(routeString(webObject, fields, dataPackage, webPackage, endpoint))
+            if (endpoint.auth){
+                stringBuilder.appendLine("      authenticate(\"user_session\") {")
+            }
+            stringBuilder.appendLine("  "+routeString(webObject, fields, dataPackage, webPackage, endpoint))
+            if (endpoint.auth){
+                stringBuilder.appendLine("      }")
+            }
         }
     }
     stringBuilder.appendLine("  }")
@@ -92,7 +98,7 @@ private fun routeGet(
                         return@get
                     }
                     
-                    val ${p}Param = ${generateConvertParamString("${p}ParamReq", paramType)}
+                    val ${p}Param = ${generateConvertParamString("${p}ParamReq", "${p}Param", paramType)}
                 """
             }.joinToString("\n")
         }
@@ -177,9 +183,8 @@ private fun postRoute(
                 $dataPackage.${webObject.ref_object}.batchInsert(obj${webObject.ref_object}) { 
                 ${
                 fields.map { field ->
-                    "this[$dataPackage.${webObject.ref_object}.${field.name}] = it.${field.name}"
-                }.joinToString("\n" +
-                        "")
+                    "this[$dataPackage.${webObject.ref_object}.${field.name}] = ${toDbObject(field.type, "it.${field.name}")}"
+                }.joinToString("\n")
             }
                 }
             }
@@ -204,7 +209,7 @@ private fun postRoute(
     """.trimIndent()
 }
 
-private fun generateConvertParamString(param: String, toType: String): String {
+private fun generateConvertParamString(param: String, newParam: String, toType: String): String {
     return when (toType) {
         "int" -> {
             """
@@ -213,8 +218,8 @@ private fun generateConvertParamString(param: String, toType: String): String {
         }
         "string" -> param
         "uuid" -> """
-            Uuid.parse(${param})
-            if (${param} == null) {
+            Uuid.parseOrNull(${param})
+            if (${newParam} == null) {
                 call.respond(HttpStatusCode.BadRequest, "idParam needs to be type uuid")
                 return@get
             }
@@ -229,5 +234,14 @@ private fun rowToTypeSuffix(toType: String): String {
         "int" -> "toInt()"
         "string", "uuid" -> "toString()"
         else -> throw IllegalArgumentException("Unsupported type $toType")
+    }
+}
+
+private fun toDbObject(type: String, fieldName: String): String {
+    return when (type) {
+        "uuid" -> """
+            Uuid.parse(${fieldName})
+        """.trimIndent()
+        else -> "$fieldName"
     }
 }

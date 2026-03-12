@@ -9,6 +9,8 @@ fun generateAuthString(auth: Auth, authPackage: String, dataPackage: String, fie
         
         ${generateAuthUser(fields)}
         
+        ${generateSessionUser()}
+        
         ${generateConfigureSession(authPackage)}
         
         ${generateAuthRoute(auth, dataPackage, fields)}
@@ -34,6 +36,7 @@ private fun generateImports(authPackage: String): String {
         import io.ktor.server.sessions.Sessions
         import io.ktor.server.sessions.cookie
         import io.ktor.server.sessions.sessions
+        import io.ktor.server.sessions.set
         import kotlinx.serialization.Serializable
         import org.jetbrains.exposed.v1.jdbc.transactions.transaction
         import org.jetbrains.exposed.v1.core.eq
@@ -52,6 +55,15 @@ private fun generateAuthUser(fields: List<Field>): String {
         ${
             fields.map { "val ${it.name}: ${dataClassTypeConverter(it.type)}" }.joinToString(",\n")
     }
+        ) 
+    """.trimIndent()
+}
+
+private fun generateSessionUser(): String {
+    return """
+        @Serializable
+        data class SessionUser(
+            val id: String,
         ) 
     """.trimIndent()
 }
@@ -110,15 +122,10 @@ private fun generateAuthRoute(auth: Auth, dataPackage: String, fields: List<Fiel
                     return@post
                 }
                 val dbPwd = query[${dataPackage}.${auth.ref_object}.${auth.pwd_field}]
-                if (dbPwd == null && BCrypt.verifyer().verify(requestAuthUser.${auth.pwd_field}.toCharArray(), dbPwd)) {
+                if (BCrypt.verifyer().verify(requestAuthUser.${auth.pwd_field}.toCharArray(), dbPwd.toCharArray()).verified) {
                     call.sessions.set(
-                        AuthUser(
-                            id = query[${dataPackage}.${auth.ref_object}.id],
-                            ${
-                                fields.map {
-                                    "${it.name} = query[${dataPackage}.${auth.ref_object}.${it.name}]"
-                                }.joinToString(",\n")
-                            }
+                        SessionUser(
+                            id = query[${dataPackage}.${auth.ref_object}.id].toString()
                         )
                     )
                     call.respond(HttpStatusCode.OK)

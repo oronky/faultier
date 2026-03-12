@@ -46,4 +46,5 @@ data class Endpoint(
     val method: String,
     val plural: Boolean = false,
     val filterParams: List<String> = emptyList(),
+    val auth: Boolean = false
 )

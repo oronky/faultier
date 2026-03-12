@@ -27,7 +27,8 @@ fun webGenerateDataClass(className: String, packageName: String, dataPackageName
 
     fields.forEachIndexed { index, field ->
         val comma = if (index < fields.size - 1) "," else ""
-        stringBuilder.appendLine("            ${field.name} = other.${field.name}$comma")
+        val suffix = if (field.type == "uuid") ".toString()" else ""
+        stringBuilder.appendLine("            ${field.name} = other.${field.name}$suffix$comma")
     }
 
     stringBuilder.appendLine("        )\n")

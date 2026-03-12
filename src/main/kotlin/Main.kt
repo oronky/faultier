@@ -164,7 +164,8 @@ var testJson = """
       "endpoints": [
         {
           "method": "GET",
-          "plural": true
+          "plural": true,
+          "auth" : true
         },
         {
           "method": "GET",
