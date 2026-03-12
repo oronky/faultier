@@ -110,7 +110,7 @@ private fun generateAuthRoute(auth: Auth, dataPackage: String, fields: List<Fiel
                     return@post
                 }
                 val dbPwd = query[${dataPackage}.${auth.ref_object}.${auth.pwd_field}]
-                if (dbPwd == null && BCrypt.verifyer().verify(AuthUser.${auth.pwd_field}.toCharArray(), dbPwd)) {
+                if (dbPwd == null && BCrypt.verifyer().verify(requestAuthUser.${auth.pwd_field}.toCharArray(), dbPwd)) {
                     call.sessions.set(
                         AuthUser(
                             id = query[${dataPackage}.${auth.ref_object}.id],

@@ -41,7 +41,7 @@ private fun fieldTypeConvert(fieldType: String): String {
     return when (fieldType) {
         "string" -> "String"
         "int" -> "Int"
-        "uuid" -> "Uuid"
+        "uuid" -> "String"
         else -> throw IllegalArgumentException("fieldType $fieldType not allowed.")
     }
 }

@@ -9,7 +9,9 @@ fun dataGenerateDataClass(className: String, packageName: String, fields: List<F
 
     stringBuilder.appendLine("import org.jetbrains.exposed.v1.core.Table\n")
     stringBuilder.appendLine("import kotlin.uuid.ExperimentalUuidApi\n")
+    stringBuilder.appendLine("import kotlin.uuid.Uuid\n")
 
+    stringBuilder.appendLine("@OptIn(ExperimentalUuidApi::class)")
     stringBuilder.appendLine("data class ${className}Entity (")
     stringBuilder.appendLine("  val id: String,")
     fields.forEach { field ->
@@ -25,7 +27,9 @@ fun dataGenerateDataClass(className: String, packageName: String, fields: List<F
     fields.forEachIndexed { index, field ->
         val nullableSuffix = if (!field.required) ".nullable()" else ""
         val foreignKeySuffix = if (field.fk != null) ".references(${field.fk})" else ""
-
+        if ( field.type == "uuid" ) {
+            stringBuilder.appendLine("  @OptIn(ExperimentalUuidApi::class)\n")
+        }
         stringBuilder.appendLine("    val ${field.name} = ${fieldTypeConvert(field.type, field.name)}$nullableSuffix$foreignKeySuffix\n")
     }
     stringBuilder.appendLine("    @OptIn(ExperimentalUuidApi::class)\n")
