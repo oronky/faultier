@@ -27,6 +27,7 @@ import io.ktor.server.routing.route
 import io.ktor.http.HttpStatusCode
 import io.ktor.server.routing.post
 import io.ktor.server.request.receive
+import io.ktor.server.auth.authenticate
 
 import org.jetbrains.exposed.v1.jdbc.transactions.transaction
 import org.jetbrains.exposed.v1.jdbc.batchInsert

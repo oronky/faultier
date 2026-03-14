@@ -19,6 +19,7 @@ fun main() {
     val webEndpointPackage = listOf("ch", "oronk", "web", "endpoint")
     val dataModelPackage = listOf("ch", "oronk", "data", "model")
     val mainPackage = listOf("ch", "oronk")
+    val authPackage = listOf("ch", "oronk", "auth")
 
     val webObjectPath = "$path/" + webModelPackage.joinToString("/")
     val dataPathname = "$path/" + dataModelPackage.joinToString("/")
@@ -71,16 +72,17 @@ fun main() {
         webEndpointPackage.joinToString("."),
         dataModelPackage.joinToString("."),
         "database",
-        schema.data_objects
+        schema.data_objects,
+        schema.auth != null,
+        authPackage.joinToString(".")
     )
     File(mainPath).mkdirs()
     File("${mainPath}/App.kt").writeText(mainString)
 
-    setupAuth(schema, path, dataModelPackage.joinToString("."))
+    setupAuth(schema, path, dataModelPackage.joinToString("."), authPackage)
 }
 
-fun setupAuth(schema: SchemaDefinition, path: String, dataPackage: String) {
-    val authPackage = listOf("ch", "oronk", "auth")
+fun setupAuth(schema: SchemaDefinition, path: String, dataPackage: String, authPackage: List<String>) {
     val authPackageString = authPackage.joinToString(".")
     val authPath = "$path/${authPackage.joinToString("/")}"
     val authObj = schema.auth ?: return
@@ -148,7 +150,7 @@ var testJson = """
         {
           "name": "gender",
           "type": "int",
-          "required": true
+          "required": false
         },
         {
           "name": "user",

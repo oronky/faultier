@@ -2,10 +2,11 @@ package org.example.ch.oronk.generators
 
 import org.example.ch.oronk.definition.DataObject
 
-fun generateMain(mainPackage: String, webEndpointPackage: String, dataObjectPath: String, databaseName: String, dataObjects: List<DataObject>): String {
+fun generateMain(mainPackage: String, webEndpointPackage: String, dataObjectPath: String, databaseName: String, dataObjects: List<DataObject>, auth: Boolean, authPackage: String): String {
     return """
         package $mainPackage
         
+        ${if (auth) "import $authPackage.authRoutes" else ""}
         import ${webEndpointPackage}.generalRoutes
         import io.ktor.serialization.gson.gson
         import io.ktor.server.application.Application
@@ -42,6 +43,7 @@ fun generateMain(mainPackage: String, webEndpointPackage: String, dataObjectPath
                 }
                 routing {
                     generalRoutes()
+                    ${if(auth) "authRoutes()" else ""}
                 }
             }.start(wait = true)
         }
